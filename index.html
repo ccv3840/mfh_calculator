@@ -461,6 +461,23 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;heigh
   .subtab{flex-shrink:0;min-height:34px;touch-action:manipulation}
 }
 
+
+/* ── Eval mode: hide sidebar (not relevant for MFH Evaluation) ── */
+.eval-mode .sidebar{
+  display:none;
+}
+.eval-mode .body-row{
+  /* Main area expands to full width when sidebar is hidden */
+}
+.eval-mode .main-area{
+  max-width:1200px;
+  margin:0 auto;
+}
+/* Smooth transition */
+.sidebar{
+  transition:opacity .2s ease;
+}
+
 </style>
 </head>
 <body>
@@ -2217,6 +2234,7 @@ function switchSection(section){
     loanBtn.className='nav-section-btn active';
     evalBtn.className='nav-section-btn';
     if(subBar)subBar.className='subtab-bar visible';
+    document.querySelector('.body-row').classList.remove('eval-mode');
     // Restore last loan sub-tab (default: overview)
     var lastLoanTab=activeTab==='eval'?'overview':activeTab;
     switchTab(lastLoanTab);
@@ -2224,6 +2242,7 @@ function switchSection(section){
     loanBtn.className='nav-section-btn';
     evalBtn.className='nav-section-btn active-eval';
     if(subBar)subBar.className='subtab-bar'; // hide sub-tabs
+    document.querySelector('.body-row').classList.add('eval-mode');
     switchTab('eval');
   }
 }
