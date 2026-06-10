@@ -409,6 +409,58 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;heigh
   .main-area{padding-bottom:max(60px,env(safe-area-inset-bottom)) !important}
 }
 
+
+/* ── Two-level navigation ── */
+.nav-section{display:flex;align-items:center;gap:2px;position:relative}
+.nav-section-btn{
+  background:transparent;border:1px solid transparent;border-radius:5px;
+  color:var(--mu);padding:5px 12px;
+  font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:500;
+  cursor:pointer;transition:all .15s;white-space:nowrap;
+  display:flex;align-items:center;gap:5px;
+}
+.nav-section-btn:hover{color:var(--tx);border-color:var(--b2)}
+.nav-section-btn.active{
+  background:var(--p2);color:var(--A);border-color:var(--Abr);
+}
+.nav-section-btn.active-eval{
+  background:var(--p2);color:var(--B);
+  border-color:rgba(251,191,36,.35);
+}
+.nav-section-btn .nav-arrow{
+  font-size:9px;transition:transform .2s;display:inline-block;
+}
+.nav-section-btn.active .nav-arrow{transform:rotate(180deg)}
+
+/* Sub-tab bar — slides in below topbar */
+.subtab-bar{
+  background:var(--p1);border-bottom:1px solid var(--b1);
+  padding:0 16px;display:none;align-items:center;gap:2px;
+  height:38px;flex-shrink:0;
+}
+.subtab-bar.visible{display:flex}
+.subtab{
+  background:transparent;border:1px solid transparent;border-radius:5px;
+  color:var(--mu);padding:4px 12px;
+  font-family:'Space Grotesk',sans-serif;font-size:11.5px;font-weight:500;
+  cursor:pointer;transition:all .15s;white-space:nowrap;
+}
+.subtab:hover{color:var(--tx);border-color:var(--b2)}
+.subtab.active{background:var(--p2);color:var(--A);border-color:var(--Abr)}
+.subtab-label{
+  font-size:9px;font-family:'Space Mono',monospace;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--di);padding:0 8px;
+}
+
+/* Mobile: stack sub-tabs */
+@media(max-width:767px){
+  .subtab-bar{
+    height:auto;padding:6px 10px;flex-wrap:wrap;gap:4px;
+    overflow-x:auto;-webkit-overflow-scrolling:touch;
+  }
+  .subtab{flex-shrink:0;min-height:34px;touch-action:manipulation}
+}
+
 </style>
 </head>
 <body>
@@ -416,17 +468,32 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;heigh
 <!-- TOPBAR -->
 <div class="topbar">
   <div class="tb-brand"><div class="tb-icon">🏠</div><div class="tb-title"><span>MFH</span> Wealth Strategy Simulator</div></div>
-  <nav class="tabs">
-    <button class="tab active" onclick="switchTab('overview')" id="tab-overview">Overview</button>
-    <button class="tab" onclick="switchTab('charts')" id="tab-charts">Charts</button>
-    <button class="tab" onclick="switchTab('metrics')" id="tab-metrics">Metrics</button>
-    <button class="tab" onclick="switchTab('eval')" id="tab-eval">🏠 Eval</button>
+  <nav class="tabs" style="gap:4px">
+    <!-- Section 1: Loan Evaluation (Overview / Charts / Metrics) -->
+    <div class="nav-section">
+      <button class="nav-section-btn active" id="section-loan"
+              onclick="switchSection('loan')">
+        📊 Loan Evaluation <span class="nav-arrow">▾</span>
+      </button>
+    </div>
+    <!-- Section 2: MFH Evaluation -->
+    <button class="nav-section-btn" id="section-eval"
+            onclick="switchSection('eval')">
+      🏠 MFH Evaluation
+    </button>
   </nav>
   <button class="mobile-menu-btn" id="mobile-menu-btn" onclick="toggleMobileSidebar()">☰ Inputs</button>
   <div class="tb-right">
     <button class="about-btn" onclick="toggleAbout()">ℹ About</button>
     <div class="tb-live">● live recalculation</div>
   </div>
+</div>
+<!-- SUB-TAB BAR (Loan Evaluation sub-sections) -->
+<div class="subtab-bar visible" id="subtab-bar">
+  <span class="subtab-label">Loan Evaluation</span>
+  <button class="subtab active" id="subtab-overview" onclick="switchTab('overview')">Overview</button>
+  <button class="subtab" id="subtab-charts"   onclick="switchTab('charts')">Charts</button>
+  <button class="subtab" id="subtab-metrics"  onclick="switchTab('metrics')">Metrics</button>
 </div>
 <!-- ABOUT DRAWER -->
 <div class="about-drawer" id="about-drawer">
@@ -2138,13 +2205,43 @@ function evalCalc() {
 // TAB SWITCHING
 // ===================================================
 let activeTab='overview',lastR=null,lastP=null;
+var _activeSection='loan'; // 'loan' or 'eval'
+
+function switchSection(section){
+  _activeSection=section;
+  // Update section buttons
+  var loanBtn=document.getElementById('section-loan');
+  var evalBtn=document.getElementById('section-eval');
+  var subBar =document.getElementById('subtab-bar');
+  if(section==='loan'){
+    loanBtn.className='nav-section-btn active';
+    evalBtn.className='nav-section-btn';
+    if(subBar)subBar.className='subtab-bar visible';
+    // Restore last loan sub-tab (default: overview)
+    var lastLoanTab=activeTab==='eval'?'overview':activeTab;
+    switchTab(lastLoanTab);
+  } else {
+    loanBtn.className='nav-section-btn';
+    evalBtn.className='nav-section-btn active-eval';
+    if(subBar)subBar.className='subtab-bar'; // hide sub-tabs
+    switchTab('eval');
+  }
+}
+
 function switchTab(t){
   ['overview','charts','metrics','eval'].forEach(k=>{
-    document.getElementById('page-'+k).className='page'+(k===t?' active':'');
-    document.getElementById('tab-'+k).className='tab'+(k===t?' active':'');
+    var pg=document.getElementById('page-'+k);
+    if(pg)pg.className='page'+(k===t?' active':'');
   });
-  activeTab=t;if(lastR&&lastP)renderActive(lastR,lastP);
+  // Update sub-tab buttons
+  ['overview','charts','metrics'].forEach(k=>{
+    var st=document.getElementById('subtab-'+k);
+    if(st)st.className='subtab'+(k===t?' active':'');
+  });
+  activeTab=t;
+  if(lastR&&lastP)renderActive(lastR,lastP);
 }
+
 function renderActive(r,p){
   if(activeTab==='overview')renderOverview(r,p);
   else if(activeTab==='charts'){renderCharts(r,p);setTimeout(initChartDrag,0);}
