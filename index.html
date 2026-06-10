@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
 <title>MFH Wealth Strategy Simulator</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/main.css">
@@ -18,6 +18,8 @@
     <button class="tab" onclick="switchTab('metrics')" id="tab-metrics">Metrics</button>
     <button class="tab" onclick="switchTab('eval')" id="tab-eval">🏠 Eval</button>
   </nav>
+  <button class="mobile-menu-btn" id="mobile-menu-btn"
+          onclick="toggleMobileSidebar()">☰ Inputs</button>
   <div class="tb-right">
     <button class="about-btn" onclick="toggleAbout()">ℹ About</button>
     <div class="tb-live">● live recalculation</div>
@@ -448,5 +450,6 @@
 <script src="js/render/metrics.js"></script>
 <script src="js/ui/tabs.js"></script>
 <script src="js/main.js"></script>
+<script src="js/ui/mobile.js"></script>
 </body>
 </html>

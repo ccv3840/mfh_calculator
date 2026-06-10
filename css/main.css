@@ -266,3 +266,158 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;heigh
 .ev-pos{color:var(--pos)}.ev-neg{color:var(--neg)}.ev-warn{color:var(--warn)}
 @media(max-width:1100px){.ev-grid{grid-template-columns:1fr 1fr}.ev-kpis{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:700px){.ev-grid{grid-template-columns:1fr}.ev-kpis{grid-template-columns:repeat(2,1fr)}.ev-cf-hero{flex-direction:column;gap:8px}}
+/* ═══════════════════════════════════════════════════════════════════
+   MOBILE — auto-detected via CSS media queries + JS class injection
+   Breakpoints: ≤767px (phone), 768–1023px (tablet)
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Hamburger sidebar toggle — hidden on desktop */
+.mobile-menu-btn{
+  display:none;background:var(--p2);border:1px solid var(--b2);
+  border-radius:5px;color:var(--tx);padding:5px 10px;
+  font-family:'Space Grotesk',sans-serif;font-size:12px;
+  cursor:pointer;transition:all .15s;white-space:nowrap;flex-shrink:0;
+}
+.mobile-menu-btn:hover{border-color:var(--A);color:var(--A)}
+
+/* ── Tablet (768–1023px) ── */
+@media(max-width:1023px){
+  .sw-cards{grid-template-columns:repeat(2,1fr)}
+  .strat-grid{grid-template-columns:repeat(2,1fr)}
+  .ag{grid-template-columns:1fr}
+  .ev-grid{grid-template-columns:1fr 1fr}
+}
+
+/* ── Phone (≤767px) ── */
+@media(max-width:767px){
+
+  /* Fix the fatal overflow:hidden that clips everything on iOS */
+  .app-shell{
+    height:auto;
+    min-height:100vh;
+    min-height:-webkit-fill-available;
+    overflow:visible;
+  }
+
+  /* Topbar: wrap onto 2 lines if needed */
+  .topbar{
+    height:auto;
+    min-height:50px;
+    padding:8px 10px;
+    flex-wrap:wrap;
+    gap:6px;
+  }
+  .mobile-menu-btn{display:flex;align-items:center;gap:5px}
+  .tb-live{display:none}
+  .tb-title{font-size:12px}
+
+  /* Tabs: horizontally scrollable strip */
+  .tabs{
+    order:10;
+    width:100%;
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+    display:flex;
+    gap:3px;
+    scrollbar-width:none;
+    padding-bottom:2px;
+  }
+  .tabs::-webkit-scrollbar{display:none}
+  .tab{flex-shrink:0;padding:6px 10px;font-size:11px;min-height:34px}
+
+  /* Body: stack sidebar below topbar */
+  .body-row{flex-direction:column;overflow:visible;min-height:0}
+
+  /* Sidebar: hidden by default, slides open */
+  .sidebar{
+    width:100%;
+    max-height:0;
+    overflow:hidden;
+    padding:0;
+    border-right:none;
+    border-bottom:none;
+    transition:max-height .35s ease, padding .35s ease;
+  }
+  .sidebar.mobile-open{
+    max-height:3000px;
+    padding:10px 11px 30px;
+    border-bottom:1px solid var(--b1);
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+  }
+
+  /* Main content area */
+  .main-area{
+    flex:1;
+    overflow:visible;
+    padding:10px 10px 60px;
+    min-width:0;
+  }
+
+  /* Strategy grid → 1 column */
+  .strat-grid{grid-template-columns:1fr}
+  .sw-cards{grid-template-columns:1fr 1fr}
+  .sw-ins{grid-template-columns:1fr}
+  .sf-grid{grid-template-columns:1fr 1fr}
+  .mh-grid{grid-template-columns:1fr}
+  .cp-row{flex-direction:column}
+  .ag{grid-template-columns:1fr}
+  .about-grid{grid-template-columns:1fr}
+  .mfh2-params{grid-template-columns:1fr}
+  .kpi-grid{grid-template-columns:repeat(2,1fr)}
+
+  /* Eval tab */
+  .ev-grid{grid-template-columns:1fr!important}
+  .ev-cf-hero{flex-direction:column;gap:10px}
+  .ev-cf-hero>div[style*="border-left"]{
+    border-left:none!important;
+    border-top:1px solid var(--b2);
+    padding:10px 0 0!important;
+  }
+  /* KPI strips — 2 columns on phone */
+  #ev-kpis > div{
+    grid-template-columns:repeat(2,1fr)!important;
+  }
+
+  /* Chart panels fill width */
+  .cp.half{min-width:100%}
+
+  /* Table — horizontal scroll */
+  .tw,#ev-table .ev-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+  /* Larger range slider thumbs for fat fingers */
+  input[type=range]{height:5px;margin-top:4px}
+  input[type=range]::-webkit-slider-thumb{
+    width:20px;height:20px;
+    border-width:3px;
+  }
+
+  /* Prevent iOS auto-zoom on input focus (needs font-size≥16px) */
+  input[type=number],input[type=text],.ev-input,.ev-addr,
+  input[type=range],.sl-edit-input{
+    font-size:16px!important;
+  }
+
+  /* Bigger tap targets */
+  .tab,.mode-btn,.about-btn,.reset-btn,.coll-btn,.amort-toggle{
+    min-height:38px;
+    touch-action:manipulation;
+  }
+  .ev-toggle-btn{min-height:34px;touch-action:manipulation}
+
+  /* KPI value size */
+  .ev-kpi-v{font-size:14px!important}
+
+  /* Charts toolbar */
+  .charts-toolbar{flex-direction:column;align-items:flex-start;gap:6px}
+
+  /* Drag hint — hide on mobile (no drag support) */
+  .charts-toolbar span{display:none}
+}
+
+/* iOS safe area (notch/home bar) */
+@supports(padding:max(0px)){
+  .topbar{padding-left:max(10px,env(safe-area-inset-left));
+          padding-right:max(10px,env(safe-area-inset-right))}
+  .main-area{padding-bottom:max(60px,env(safe-area-inset-bottom))}
+}
