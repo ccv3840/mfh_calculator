@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>MFH Tests</title>
+<style>
+  body{font-family:monospace;background:#0b0d12;color:#e8eaf6;padding:20px;font-size:13px}
+  .pass{color:#34d399}.fail{color:#f87171}.suite{color:#fbbf24;margin-top:16px;font-weight:700}
+  h1{color:#a78bfa;margin-bottom:16px}
+  #summary{margin-top:20px;font-size:15px;font-weight:700}
+</style>
+</head>
+<body>
+<h1>🧪 MFH Calculator — Test Suite</h1>
+<pre id="out"></pre>
+<div id="summary"></div>
+
+<script>
+var _out=document.getElementById("out");
+var _pass=0,_fail=0;
+function log(msg,cls){ var s=document.createElement("span"); s.className=cls||""; s.textContent=msg+"\n"; _out.appendChild(s); }
+function suite(n){ log("\n── "+n+" ──","suite"); }
+function test(name,fn){
+  try{ fn(); _pass++; log("  ✓ "+name,"pass"); }
+  catch(e){ _fail++; log("  ✗ "+name+"\n    "+e.message,"fail"); }
+}
+function assert(c,m){ if(!c) throw new Error(m||"Expected truthy"); }
+function assertEqual(a,b,m){ if(a!==b) throw new Error(m||"Expected "+JSON.stringify(b)+" got "+JSON.stringify(a)); }
+function assertClose(a,b,t,m){ t=t||0.01; if(Math.abs(a-b)>t) throw new Error(m||"Expected ~"+b+" got "+a); }
+function assertGt(a,b,m){ if(a<=b) throw new Error(m||a+" not > "+b); }
+function assertLt(a,b,m){ if(a>=b) throw new Error(m||a+" not < "+b); }
+</script>
+<script src="../js/formatters.js"></script>
+<script src="../js/calc/core.js"></script>
+<script src="formatters.test.js"></script>
+<script src="calc.core.test.js"></script>
+<script src="calc.eval.test.js"></script>
+<script>
+var el=document.getElementById("summary");
+el.className=_fail===0?"pass":"fail";
+el.textContent=(_fail===0?"✓ ALL PASSED":"✗ FAILURES")+": "+_pass+" passed, "+_fail+" failed";
+</script>
+</body>
+</html>
