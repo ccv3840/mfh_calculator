@@ -580,6 +580,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;heigh
   <input type="range" id="til" min="0.5" max="3" step="0.25" value="1" oninput="slR(this,'til','v_til','pct')"></div>
 
   <!-- ═══ OPTION 1 (A) ═══ -->
+  <div id="sb-opt-A">
   <div class="grp-title" style="color:var(--A);border-color:var(--A)33">🟢 Option 1 (A) — Swiss Lombard + Small MFH</div>
   <div class="sl-row"><div class="sl-label"><span>MFH price <span class="ot otA">A</span><span class="ot otB">B</span></span><span class="sl-val" id="v_mab" onclick="startEdit(this,'mab','eur')">€2.0M</span></div>
   <input type="range" id="mab" min="300000" max="5000000" step="50000" value="2000000" oninput="slR(this,'mab','v_mab','eur')"></div>
@@ -599,6 +600,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;heigh
   </div>
 
   <!-- ═══ OPTION 2 (B) ═══ -->
+  </div><!-- /sb-opt-A -->
+  <div id="sb-opt-B">
   <div class="grp-title" style="color:var(--B);border-color:var(--B)33">🟡 Option 2 (B) — German Grundschuld + Small MFH</div>
   <div class="sl-row sB"><div class="sl-label"><span>Grundschuld rate</span><span class="sl-val" id="v_gr" onclick="startEdit(this,'gr','pct')">4.5%</span></div>
   <input type="range" id="gr" min="2" max="7" step="0.25" value="4.5" oninput="slR(this,'gr','v_gr','pct')"></div>
@@ -616,11 +619,15 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;heigh
   </div>
 
   <!-- ═══ OPTION 3 (C) ═══ -->
+  </div><!-- /sb-opt-B -->
+  <div id="sb-opt-C">
   <div class="grp-title" style="color:var(--C);border-color:var(--C)33">🟣 Option 3 (C) — All-in Large MFH</div>
   <div class="sl-row sC"><div class="sl-label"><span>MFH price (all-in)</span><span class="sl-val" id="v_mc" onclick="startEdit(this,'mc','eur')">€4.0M</span></div>
   <input type="range" id="mc" min="600000" max="10000000" step="100000" value="4000000" oninput="slR(this,'mc','v_mc','eur')"></div>
 
   <!-- ═══ OPTION 4 (D) ═══ -->
+  </div><!-- /sb-opt-C -->
+  <div id="sb-opt-D">
   <div class="grp-title" style="color:var(--D);border-color:var(--D)33">🔵 Option 4 (D) — Pure S&amp;P500 Benchmark</div>
   <label class="cb-row"><input type="checkbox" id="d_lomb_en" onchange="toggleDLomb();calc()"> Enable Lombard on S&amp;P500 portfolio</label>
   <div id="d-lomb-fields" style="opacity:.35;pointer-events:none">
@@ -639,7 +646,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;heigh
     </div>
     <div style="font-size:9px;color:var(--D);font-family:Space Mono,monospace;margin-top:4px;opacity:.8">Uses same Lombard rate as Option 1(A) · Salary freed after repayment → S&P500</div>
   </div>
-
+</div><!-- /sb-opt-D -->
   <!-- ═══ PRIVATE LOAN ═══ -->
   <button class="coll-btn" id="pl-btn" onclick="toggleColl('pl-body','pl-btn')">+ Private Initial Capital Loan</button>
   <div class="coll-content" id="pl-body">
@@ -945,6 +952,30 @@ const OPT={
     desc:'Lump-sum + full salary DCA into S&P500 at assumed return. Zero debt. Zero operations. Benchmark.'},
 };
 const KEYS=['A','B','C','D'];
+
+// ── Option visibility (checkboxes in Overview) ──
+var optVisible={A:true,B:true,C:true,D:true};
+function visKeys(){return KEYS.filter(k=>optVisible[k]);}
+function toggleOption(k,el){
+  optVisible[k]=el.checked;
+  updateSidebarVisibility();
+  calc();
+}
+function updateSidebarVisibility(){
+  // Dim sidebar section when option is OFF; AB section: dim only if BOTH off
+  var abVis=optVisible.A||optVisible.B;
+  function setSB(id,vis){
+    var el=document.getElementById(id);
+    if(!el)return;
+    el.style.opacity=vis?'1':'0.3';
+    el.style.pointerEvents=vis?'':'none';
+    el.style.transition='opacity .2s';
+  }
+  setSB('sb-opt-A',optVisible.A);
+  setSB('sb-opt-B',optVisible.B);
+  setSB('sb-opt-C',optVisible.C);
+  setSB('sb-opt-D',optVisible.D);
+}
 
 // Repayment modes (per option key)
 let lm_mode=0, gm_mode=0, dm_mode=0; // 0=salary, 1=interest-only, 2=custom
@@ -1650,16 +1681,32 @@ function renderOverview(r,p){
   const pros={A:['Low rate ('+fP(p.lr)+')',lm_mode===1?'Full salary→S&P500 yr1':'Flexible repayment','ETF keeps compounding'],B:['No FX currency risk','Tax-deductible interest','All-German structure'],C:['Max property exposure',p.sal>0?'All salary→S&P500':'No salary cost','No acquisition loan'],D:['Zero operational work','No debt/margin call',p.d_lomb_en?'Leveraged S&P500 via Lombard':'Full diversification']};
   const cons={A:['CHF/EUR FX exposure',lm_mode===0?'Salary used for repayment':'Lombard held to exit','2-country complexity'],B:['Higher rate ('+fP(p.gr)+')',gm_mode===0?'Salary used for repayment':'Fixed period debt','Lower collateral growth'],C:['All capital consumed','€'+fmtE(p.mc_)+' mortgage risk','Concentrated position'],D:['No real estate exposure','No rental income',p.d_lomb_en?'Lombard repaid at exit from portfolio':'No leverage']};
   document.getElementById('strat-legend').innerHTML=KEYS.map(k=>{const o=OPT[k];
-    return`<div class="sc sc${k}"><div class="sc-num">${o.sn}</div><div class="sc-name">${o.name}</div><div class="sc-desc">${o.desc}</div><div class="sc-chips">${pros[k].map(x=>`<span class="chip-p">✓ ${x}</span>`).join('')}${cons[k].map(x=>`<span class="chip-n">⚠ ${x}</span>`).join('')}</div></div>`;
+    const chk=optVisible[k]?'checked':'';
+    const dim=optVisible[k]?'':'opacity:.35;pointer-events:none;';
+    return`<div class="sc sc${k}" style="${dim}transition:opacity .2s">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">
+        <div class="sc-num">${o.sn}</div>
+        <label style="display:flex;align-items:center;gap:5px;cursor:pointer;opacity:1;pointer-events:auto">
+          <input type="checkbox" ${chk}
+            onchange="toggleOption('${k}',this)"
+            style="width:15px;height:15px;cursor:pointer;accent-color:${o.c};flex-shrink:0">
+          <span style="font-size:9px;font-family:Space Mono,monospace;color:${chk?o.c:'var(--di)'}">${chk?'ON':'OFF'}</span>
+        </label>
+      </div>
+      <div class="sc-name">${o.name}</div>
+      <div class="sc-desc">${o.desc}</div>
+      <div class="sc-chips">${pros[k].map(x=>`<span class="chip-p">✓ ${x}</span>`).join('')}${cons[k].map(x=>`<span class="chip-n">⚠ ${x}</span>`).join('')}</div>
+    </div>`;
   }).join('');
 
   // Summary window
   const tots=[r.totA,r.totB,r.totC,r.totD],gains=[r.gainA,r.gainB,r.gainC,r.gainD],cagrs=[r.cagrA,r.cagrB,r.cagrC,r.cagrD];
-  const sorted=[...KEYS].sort((_a,_b)=>tots[KEYS.indexOf(_b)]-tots[KEYS.indexOf(_a)]);
+  const vk=visKeys();
+  const sorted=[...vk].sort((_a,_b)=>tots[KEYS.indexOf(_b)]-tots[KEYS.indexOf(_a)]);
   const rank={};sorted.forEach((k,i)=>rank[k]=i+1);
   const rankE={1:'🥇 #1',2:'🥈 #2',3:'🥉 #3',4:'4th'};
   document.getElementById('sw-yr').textContent=p.yrs;
-  document.getElementById('sw-cards').innerHTML=KEYS.map(k=>{
+  document.getElementById('sw-cards').innerHTML=vk.map(k=>{
     const i=KEYS.indexOf(k),o=OPT[k],mult=(tots[i]/Math.max(1,r.ti)).toFixed(2);
     return`<div class="swc" style="border-left:2px solid ${o.c}33">
       <div class="swc-rank"><span style="color:${o.c};font-size:9px;font-family:Space Mono,monospace">${o.sn}</span><span style="font-size:9px;font-family:Space Mono,monospace;background:${o.bg};color:${o.c};border:1px solid ${o.br};padding:1px 5px;border-radius:3px">${rankE[rank[k]]}</span></div>
@@ -1671,7 +1718,8 @@ function renderOverview(r,p){
   }).join('');
 
   // Insights
-  const winner=KEYS[KEYS.map(k=>gains[KEYS.indexOf(k)]).indexOf(Math.max(...gains))];
+  const _vgains=vk.map(k=>r['gain'+k]);
+  const winner=vk.length?vk[_vgains.indexOf(Math.max(..._vgains))]:KEYS[0];
   const bd=Math.abs(r.totB-r.totD);
   const opp=r.sp500_yr[p.yrs]-r.sp_A_yr[p.yrs];
   document.getElementById('sw-ins').innerHTML=[
@@ -1681,9 +1729,9 @@ function renderOverview(r,p){
   ].map(i=>`<div class="si"><div class="si-lbl">${i.l}</div><div class="si-val" style="color:${i.vc}">${i.v}</div><div class="si-desc">${i.d}</div></div>`).join('');
 
   // Bar chart
-  const maxG=Math.max(...gains);
-  const bkeys=[...KEYS].sort((_a,_b)=>gains[KEYS.indexOf(_b)]-gains[KEYS.indexOf(_a)]);
-  document.getElementById('bc').innerHTML=bkeys.map(k=>{
+  const maxG=vk.length?Math.max(...vk.map(k=>r['gain'+k])):1;
+  const bkeys=[...vk].sort((_a,_b)=>r['gain'+_b]-r['gain'+_a]);
+  document.getElementById('bc').innerHTML=bkeys.length?bkeys.map(k=>{
     const i=KEYS.indexOf(k),o=OPT[k],g=gains[i],t=tots[i];
     const pct=Math.max(3,g/Math.max(maxG,1)*100),mult=(t/Math.max(1,r.ti)).toFixed(2);
     return`<div class="bc-row">
@@ -1692,10 +1740,10 @@ function renderOverview(r,p){
       <div class="bc-num" style="color:${o.c}">${fmtE(t)}</div>
       <div class="bc-x">${mult}×</div>
     </div>`;
-  }).join('');
+  }).join(''):'<div style="color:var(--mu);padding:14px;font-size:11px">No options selected — tick at least one option above.</div>';
 
   // Salary flow
-  document.getElementById('sf').innerHTML=KEYS.map(k=>{
+  document.getElementById('sf').innerHTML=vk.map(k=>{
     const o=OPT[k];
     const yr_rep=k==='A'?r.lA.yr:k==='B'?r.lB.yr:0;
     const sal_free=k==='A'?r.lA.sal_freed:k==='B'?r.lB.sal_freed:1;
@@ -1712,7 +1760,7 @@ function renderOverview(r,p){
 
   // Table
   document.getElementById('yr-lbl').textContent=p.yrs;
-  const thd=KEYS.map(k=>`<th style="color:${OPT[k].c}">${OPT[k].sn}<br><span style="font-size:7.5px;opacity:.6;font-weight:400">${OPT[k].name}</span></th>`).join('');
+  const thd=vk.map(k=>`<th style="color:${OPT[k].c}">${OPT[k].sn}<br><span style="font-size:7.5px;opacity:.6;font-weight:400">${OPT[k].name}</span></th>`).join('');
   const cE=(v,k,b)=>{
     const col=OPT[k].c,fmt=fEf(v);
     return b?`<b style="color:${col}">${fmt}</b>`:`<span style="color:${col}">${fmt}</span>`;
@@ -1735,9 +1783,8 @@ function renderOverview(r,p){
   ].filter(Boolean);
   document.getElementById('bt').innerHTML=`<thead><tr><th>Component</th>${thd}</tr></thead><tbody>`+
     rows.map(row=>{
-      if(row.sep)return`<tr class="tr-sep"><td colspan="5">${row.sep}</td></tr>`;
-      const tds=row.vs.map((v,i)=>{
-        const k=KEYS[i];
+      if(row.sep)return`<tr class="tr-sep"><td colspan="${vk.length+1}">${row.sep}</td></tr>`;
+      const tds=vk.map(k=>{ const i=KEYS.indexOf(k); const v=row.vs[i];
         if(v===null)return`<td style="color:var(--di)">—</td>`;
         if(row.gain)return`<td>${cG(v)}</td>`;
         if(row.bold)return`<td>${cE(v,k,true)}</td>`;
@@ -1748,7 +1795,9 @@ function renderOverview(r,p){
     }).join('')+'</tbody>';
 
   // Amort
-  document.getElementById('ag').innerHTML=mkAmort(r.mabR,r.mabAnn,'Options 1(A) & 2(B) — '+fmtE(p.mab)+' MFH',OPT.A.c)+mkAmort(r.mcR,r.mcAnn,'Option 3(C) — '+fmtE(p.mc_)+' MFH',OPT.C.c);
+  document.getElementById('ag').innerHTML=
+    ((optVisible.A||optVisible.B)?mkAmort(r.mabR,r.mabAnn,'Options 1(A) & 2(B) — '+fmtE(p.mab)+' MFH',OPT.A.c):'')+
+    (optVisible.C?mkAmort(r.mcR,r.mcAnn,'Option 3(C) — '+fmtE(p.mc_)+' MFH',OPT.C.c):'');
 
   // MFH2
   if(mfh2Open&&r.mfh2_result){
@@ -1767,7 +1816,7 @@ function renderOverview(r,p){
 
   // Insight bar
   const w=r['tot'+winner];
-  document.getElementById('insight-bar').innerHTML=`<b style="color:${OPT[winner].c}">${OPT[winner].fn}</b> leads with ${fmtE(w)} (${r['cagr'+winner].toFixed(1)}% CAGR).  B vs D gap: <b>${fmtE(Math.abs(r.totB-r.totD))}</b> ${r.totB>r.totD?'— leveraged property leads':'— S&P500 benchmark leads'}.  Lombard mode: <b>${['Salary schedule','Interest-only (cheap leverage)','Custom '+p.lmy+'yr'][p.lm]}</b> · Grundschuld: <b>${['Salary schedule','Interest-only','Custom '+p.gmy+'yr'][p.gm]}</b>`;
+  document.getElementById('insight-bar').innerHTML=vk.length===0?'Select at least one option above to compare.':`<b style="color:${OPT[winner].c}">${OPT[winner].fn}</b> leads with ${fmtE(w)} (${r['cagr'+winner].toFixed(1)}% CAGR).  B vs D gap: <b>${fmtE(Math.abs(r.totB-r.totD))}</b> ${r.totB>r.totD?'— leveraged property leads':'— S&P500 benchmark leads'}.  Lombard mode: <b>${['Salary schedule','Interest-only (cheap leverage)','Custom '+p.lmy+'yr'][p.lm]}</b> · Grundschuld: <b>${['Salary schedule','Interest-only','Custom '+p.gmy+'yr'][p.gm]}</b>`;
 }
 
 function mkAmort(rows,ann,label,col){
@@ -1783,38 +1832,45 @@ function mkAmort(rows,ann,label,col){
 function renderCharts(r,p){
   function safe(id,fn){try{const el=document.getElementById(id);if(el)el.innerHTML=fn();}catch(e){const el=document.getElementById(id);if(el)el.innerHTML='<div style="color:var(--neg);padding:10px;font-size:11px">Chart error: '+e.message+'</div>';console.error(id,e);}}
 
-  safe('ch-wealth',()=>svgLine([r.yearly.A,r.yearly.B,r.yearly.C,r.yearly.D],{colors:KEYS.map(k=>OPT[k].c),labels:KEYS.map(k=>OPT[k].sn+' · '+OPT[k].name.split(' ')[0]),xLabel:'Year',fill:[1,1,1,1],yFmt:fmtE}));
+  const _vk=visKeys();
+  safe('ch-wealth',()=>svgLine(_vk.map(k=>r.yearly[k]),{colors:_vk.map(k=>OPT[k].c),labels:_vk.map(k=>OPT[k].sn+' · '+OPT[k].name.split(' ')[0]),xLabel:'Year',fill:_vk.map(()=>1),yFmt:fmtE}));
   const pv=r.mabR.map(row=>row.pv),bl=r.mabR.map(row=>row.bal),eq=r.mabR.map(row=>row.eq);
-  safe('ch-eq-ab',()=>svgLine([pv,bl,eq],{colors:['#60a5fa','#f87171',OPT.A.c],labels:['Property Value','Mortgage Balance','Net Equity'],yFmt:fmtE,fill:[0,0,1]}));
+  const _abVis=optVisible.A||optVisible.B;
+  safe('ch-eq-ab',()=>_abVis?svgLine([pv,bl,eq],{colors:['#60a5fa','#f87171',OPT.A.c],labels:['Property Value','Mortgage Balance','Net Equity'],yFmt:fmtE,fill:[0,0,1]}):'<div style="color:var(--di);padding:20px;text-align:center;font-size:11px">Options 1(A) &amp; 2(B) hidden</div>');
   const pvC=r.mcR.map(row=>row.pv),blC=r.mcR.map(row=>row.bal),eqC=r.mcR.map(row=>row.eq);
-  safe('ch-eq-c',()=>svgLine([pvC,blC,eqC],{colors:['#60a5fa','#f87171',OPT.C.c],labels:['Property Value','Mortgage Balance','Net Equity'],yFmt:fmtE,fill:[0,0,1]}));
-  safe('ch-cf-ab',()=>svgBars(r.mabR.map(row=>row.nc),{yFmt:fmtE}));
-  safe('ch-cf-c',()=>svgBars(r.mcR.map(row=>row.nc),{yFmt:fmtE}));
-  safe('ch-costs',()=>svgMFHCosts(r.mabR,p));
-  safe('ch-dscr',()=>svgLine([r.mabR.map(row=>row.dscr),r.mcR.map(row=>row.dscr)],{colors:[OPT.A.c,OPT.C.c],labels:['DSCR 1(A)&2(B)','DSCR 3(C)'],yFmt:v=>(+v).toFixed(2)+'×',refs:[{v:1.0,c:'#f87171',lbl:'1.0'},{v:1.25,c:'#fbbf24',lbl:'1.25'}]}));
-  safe('ch-ltv',()=>svgLTV(r.ltv_data||[]));
+  safe('ch-eq-c',()=>optVisible.C?svgLine([pvC,blC,eqC],{colors:['#60a5fa','#f87171',OPT.C.c],labels:['Property Value','Mortgage Balance','Net Equity'],yFmt:fmtE,fill:[0,0,1]}):'<div style="color:var(--di);padding:20px;text-align:center;font-size:11px">Option 3(C) hidden</div>');
+  safe('ch-cf-ab',()=>_abVis?svgBars(r.mabR.map(row=>row.nc),{yFmt:fmtE}):'<div style="color:var(--di);padding:20px;text-align:center;font-size:11px">Options 1(A) &amp; 2(B) hidden</div>');
+  safe('ch-cf-c',()=>optVisible.C?svgBars(r.mcR.map(row=>row.nc),{yFmt:fmtE}):'<div style="color:var(--di);padding:20px;text-align:center;font-size:11px">Option 3(C) hidden</div>');
+  safe('ch-costs',()=>(optVisible.A||optVisible.B)?svgMFHCosts(r.mabR,p):'<div style="color:var(--di);padding:20px;text-align:center;font-size:11px">Options 1(A) &amp; 2(B) hidden</div>');
+  const _dscrSer=[],_dscrCol=[],_dscrLbl=[];
+  if(optVisible.A||optVisible.B){_dscrSer.push(r.mabR.map(row=>row.dscr));_dscrCol.push(OPT.A.c);_dscrLbl.push('DSCR 1(A)&2(B)');}
+  if(optVisible.C){_dscrSer.push(r.mcR.map(row=>row.dscr));_dscrCol.push(OPT.C.c);_dscrLbl.push('DSCR 3(C)');}
+  safe('ch-dscr',()=>_dscrSer.length?svgLine(_dscrSer,{colors:_dscrCol,labels:_dscrLbl,yFmt:v=>(+v).toFixed(2)+'×',refs:[{v:1.0,c:'#f87171',lbl:'1.0'},{v:1.25,c:'#fbbf24',lbl:'1.25'}]}):'<div style="color:var(--di);padding:20px;text-align:center;font-size:11px">No MFH options selected</div>');
+  safe('ch-ltv',()=>optVisible.A?svgLTV(r.ltv_data||[]):'<div style="color:var(--di);padding:20px;text-align:center;font-size:11px">Option 1(A) hidden</div>');
   safe('ch-ltv-d',()=>{
     if(!p.d_lomb_en||!r.d_lomb_amt||r.d_lomb_amt<=0)
       return'<div style="color:var(--mu);padding:22px 14px;font-size:11px;text-align:center;line-height:1.8">Enable <b style=\"color:var(--D)\">Lombard on Option 4(D)</b> in the sidebar (Option 4 section) to see the S&amp;P500 vs Lombard LTV trajectory here.</div>';
     return svgLTV(r.ltv_data_D||[]);
   });
   safe('ch-dca',()=>{
-    const ayr=(r.sp_A_yr||[]).slice(1),byr=(r.sp_B_yr||[]).slice(1),cyr=(r.sp_C_yr||r.sp500_yr||[]).slice(1);
-    return svgLine([ayr,byr,cyr],{colors:[OPT.A.c,OPT.B.c,OPT.C.c],labels:['Opt.1(A) S&P500','Opt.2(B) S&P500','Opt.3(C)/4(D) S&P500'],yFmt:fmtE});
+    const _dcaSer=[],_dcaCol=[],_dcaLbl=[];
+    if(optVisible.A){_dcaSer.push((r.sp_A_yr||[]).slice(1));_dcaCol.push(OPT.A.c);_dcaLbl.push('Opt.1(A) S&P500');}
+    if(optVisible.B){_dcaSer.push((r.sp_B_yr||[]).slice(1));_dcaCol.push(OPT.B.c);_dcaLbl.push('Opt.2(B) S&P500');}
+    if(optVisible.C||optVisible.D){_dcaSer.push(((r.sp_C_yr||r.sp500_yr||[])).slice(1));_dcaCol.push(OPT.C.c);_dcaLbl.push('Opt.3(C)/4(D) S&P500');}
+    return _dcaSer.length?svgLine(_dcaSer,{colors:_dcaCol,labels:_dcaLbl,yFmt:fmtE}):'<div style="color:var(--di);padding:20px;text-align:center;font-size:11px">No options selected</div>';
   });
-  safe('ch-cumcf',()=>svgLine([r.mabR.map(row=>row.cum),r.mcR.map(row=>row.cum)],{colors:[OPT.A.c,OPT.C.c],labels:['Cumul. CF 1(A)&2(B)','Cumul. CF 3(C)'],yFmt:fmtE,refs:[{v:0,c:'#3a3f5e',lbl:''}]}));
+  const _cumSer=[],_cumCol=[],_cumLbl=[];
+  if(optVisible.A||optVisible.B){_cumSer.push(r.mabR.map(row=>row.cum));_cumCol.push(OPT.A.c);_cumLbl.push('Cumul. CF 1(A)&2(B)');}
+  if(optVisible.C){_cumSer.push(r.mcR.map(row=>row.cum));_cumCol.push(OPT.C.c);_cumLbl.push('Cumul. CF 3(C)');}
+  safe('ch-cumcf',()=>_cumSer.length?svgLine(_cumSer,{colors:_cumCol,labels:_cumLbl,yFmt:fmtE,refs:[{v:0,c:'#3a3f5e',lbl:''}]}):'<div style="color:var(--di);padding:20px;text-align:center;font-size:11px">No MFH options selected</div>');
   document.getElementById('yr-lbl2').textContent=p.yrs;
-  const stk=[
-    // Slot 0=Collateral/Lump, 1=MFH Equity, 2=MFH Cash, 3=Salary S&P500
-    {label:'Option 1 (A)',sub:'Swiss Lombard + MFH',color:OPT.A.c,
-     segs:[{v:r.netETF_A,slot:0},{v:r.fAB.eq,slot:1},{v:Math.max(0,r.fAB.cum),slot:2},{v:r.sp_A,slot:3}]},
-    {label:'Option 2 (B)',sub:'Grundschuld + MFH',color:OPT.B.c,
-     segs:[{v:r.propV+r.carryB,slot:0},{v:r.fAB.eq,slot:1},{v:Math.max(0,r.fAB.cum),slot:2},{v:r.sp_B,slot:3}]},
-    {label:'Option 3 (C)',sub:'All-in Large MFH',color:OPT.C.c,
-     segs:[{v:0,slot:0},{v:r.fC.eq,slot:1},{v:Math.max(0,r.fC.cum),slot:2},{v:r.sp_C,slot:3}]},
-    {label:'Option 4 (D)',sub:'Pure S&P500',color:OPT.D.c,
-     segs:[{v:r.lumpD,slot:0},{v:0,slot:1},{v:0,slot:2},{v:r.sp_D,slot:3}]},
+  const _stkAll=[
+    {k:'A',label:'Option 1 (A)',sub:'Swiss Lombard + MFH',color:OPT.A.c,segs:[{v:r.netETF_A,slot:0},{v:r.fAB.eq,slot:1},{v:Math.max(0,r.fAB.cum),slot:2},{v:r.sp_A,slot:3}]},
+    {k:'B',label:'Option 2 (B)',sub:'Grundschuld + MFH',color:OPT.B.c,segs:[{v:r.propV+r.carryB,slot:0},{v:r.fAB.eq,slot:1},{v:Math.max(0,r.fAB.cum),slot:2},{v:r.sp_B,slot:3}]},
+    {k:'C',label:'Option 3 (C)',sub:'All-in Large MFH',color:OPT.C.c,segs:[{v:0,slot:0},{v:r.fC.eq,slot:1},{v:Math.max(0,r.fC.cum),slot:2},{v:r.sp_C,slot:3}]},
+    {k:'D',label:'Option 4 (D)',sub:'Pure S&P500',color:OPT.D.c,segs:[{v:r.lumpD,slot:0},{v:0,slot:1},{v:0,slot:2},{v:r.sp_D,slot:3}]},
   ];
+  const stk=_stkAll.filter(s=>optVisible[s.k]);
   // Map slot index as the segment index so svgStackH uses SEG_COLORS[slot]
   stk.forEach(row=>row.segs=row.segs.map((sg,i)=>({v:sg.v,c:null,_slot:sg.slot??i})));
   safe('ch-stack',()=>svgStackH(stk,{}));
@@ -1836,13 +1892,18 @@ function renderMetrics(r,p){
       </div>
     </div>`;
   }
-  document.getElementById('mh').innerHTML=kCard(m,'Options 1(A) & 2(B) — '+OPT.A.name.split('+')[1]||'MFH',p.mab,OPT.A.c,OPT.A.bg,OPT.A.br)+kCard(mc,'Option 3(C) — '+OPT.C.name,p.mc_,OPT.C.c,OPT.C.bg,OPT.C.br);
+  document.getElementById('mh').innerHTML=
+    ((optVisible.A||optVisible.B)?kCard(m,'Options 1(A) & 2(B) — '+OPT.A.name.split('+')[1]||'MFH',p.mab,OPT.A.c,OPT.A.bg,OPT.A.br):'')+
+    (optVisible.C?kCard(mc,'Option 3(C) — '+OPT.C.name,p.mc_,OPT.C.c,OPT.C.bg,OPT.C.br):'');
 
   const b=(v,g,w,fmt)=>`<span class="badge ${cls(v,g,w)}">${fmt(v)}</span>`;
-  const row=(l,d,vAB,vC,bAB,bC)=>`<tr><td><div class="m-lbl">${l}</div><div class="m-desc">${d}</div></td><td>${bAB||''} ${vAB}</td><td>${bC||''} ${vC}</td></tr>`;
-  const sec=l=>`<tr class="m-sec"><td colspan="3">${l}</td></tr>`;
+  const row=(l,d,vAB,vC,bAB,bC)=>`<tr><td><div class="m-lbl">${l}</div><div class="m-desc">${d}</div></td>${_mtAbVis?`<td>${bAB||''} ${vAB}</td>`:''}${_mtCVis?`<td>${bC||''} ${vC}</td>`:''}</tr>`;
+  const sec=l=>`<tr class="m-sec"><td colspan="${1+_mtColspan}">${l}</td></tr>`;
 
-  document.getElementById('mt').innerHTML=`<thead><tr><th>Metric</th><th style="color:${OPT.A.c}">Options 1(A) &amp; 2(B) — ${fmtE(p.mab)}</th><th style="color:${OPT.C.c}">Option 3(C) — ${fmtE(p.mc_)}</th></tr></thead><tbody>`+[
+  const _mtAbVis=optVisible.A||optVisible.B, _mtCVis=optVisible.C;
+  const _mtColspan=(_mtAbVis&&_mtCVis)?2:1;
+  const _mtHead=(_mtAbVis?`<th style="color:${OPT.A.c}">Options 1(A) &amp; 2(B) — ${fmtE(p.mab)}</th>`:'')+(_mtCVis?`<th style="color:${OPT.C.c}">Option 3(C) — ${fmtE(p.mc_)}</th>`:'');
+  document.getElementById('mt').innerHTML=`<thead><tr><th>Metric</th>${_mtHead}</tr></thead><tbody>`+[
     sec('DSCR / Debt Coverage'),
     row('DSCR — Year 1','NOI ÷ Debt Service. >1.25 healthy, >1.0 ok, <1.0 cash-negative',m.dscr1.toFixed(4)+'×',mc.dscr1.toFixed(4)+'×',b(m.dscr1,1.25,1,v=>v>=1.25?'✓ healthy':v>=1?'ok':'⚠ risky'),b(mc.dscr1,1.25,1,v=>v>=1.25?'✓ healthy':v>=1?'ok':'⚠ risky')),
     row('DSCR — Year '+p.yrs,'Rent grew '+fP(p.rg)+'/yr improves coverage',m.dscrN.toFixed(4)+'×',mc.dscrN.toFixed(4)+'×',b(m.dscrN,1.25,1,v=>v>=1.25?'✓':'ok'),b(mc.dscrN,1.25,1,v=>v>=1.25?'✓':'ok')),
@@ -1868,10 +1929,22 @@ function renderMetrics(r,p){
     row('Risk Premium vs '+fP(p.rf),'Levered IRR minus risk-free rate (German Bund)',fPn(m.rp),fPn(mc.rp),b(m.rp,5,2,v=>fPn(v)),b(mc.rp,5,2,v=>fPn(v))),
   ].join('')+'</tbody>';
 
-  document.getElementById('ch-dscr2').innerHTML=svgLine([m.dscr_arr,mc.dscr_arr],{colors:[OPT.A.c,OPT.C.c],labels:['DSCR 1(A)&2(B)','DSCR 3(C)'],yFmt:v=>(+v).toFixed(2),refs:[{v:1.0,c:'#f87171',lbl:'1.0'},{v:1.25,c:'#fbbf24',lbl:'1.25'}]});
-  document.getElementById('ch-coc').innerHTML=svgLine([m.coc_g,mc.coc_g,m.coc_n,mc.coc_n],{colors:[OPT.A.c,OPT.C.c,OPT.A.c+'88',OPT.C.c+'88'],labels:['1&2 gross','3 gross','1&2 net','3 net'],yFmt:v=>(+v).toFixed(1)+'%',refs:[{v:0,c:'#3a3f5e',lbl:''}]});
-  document.getElementById('ch-npv').innerHTML=svgLine([(m.npvSens||[]).map(d=>d.npv),(mc.npvSens||[]).map(d=>d.npv)],{colors:[OPT.A.c,OPT.C.c],labels:['NPV 1(A)&2(B)','NPV 3(C)'],yFmt:fmtE,refs:[{v:0,c:'#f87171',lbl:'IRR (NPV=0)'}]});
-  document.getElementById('ch-cc2').innerHTML=svgLine([r.mabR.map(row=>row.cum),r.mcR.map(row=>row.cum)],{colors:[OPT.A.c,OPT.C.c],labels:['Cum.CF 1&2','Cum.CF 3'],yFmt:fmtE,refs:[{v:0,c:'#3a3f5e',lbl:''}]});
+  const _md2s=[],_md2c=[],_md2l=[];
+  if(_mtAbVis){_md2s.push(m.dscr_arr);_md2c.push(OPT.A.c);_md2l.push('DSCR 1(A)&2(B)');}
+  if(_mtCVis){_md2s.push(mc.dscr_arr);_md2c.push(OPT.C.c);_md2l.push('DSCR 3(C)');}
+  document.getElementById('ch-dscr2').innerHTML=_md2s.length?svgLine(_md2s,{colors:_md2c,labels:_md2l,yFmt:v=>(+v).toFixed(2),refs:[{v:1.0,c:'#f87171',lbl:'1.0'},{v:1.25,c:'#fbbf24',lbl:'1.25'}]}):'<div style="color:var(--di);padding:20px;font-size:11px">No options selected</div>';
+  const _cocs=[],_cocc=[],_cocl=[];
+  if(_mtAbVis){_cocs.push(m.coc_g,m.coc_n);_cocc.push(OPT.A.c,OPT.A.c+'88');_cocl.push('1&2 gross','1&2 net');}
+  if(_mtCVis){_cocs.push(mc.coc_g,mc.coc_n);_cocc.push(OPT.C.c,OPT.C.c+'88');_cocl.push('3 gross','3 net');}
+  document.getElementById('ch-coc').innerHTML=_cocs.length?svgLine(_cocs,{colors:_cocc,labels:_cocl,yFmt:v=>(+v).toFixed(1)+'%',refs:[{v:0,c:'#3a3f5e',lbl:''}]}):'<div style="color:var(--di);padding:20px;font-size:11px">No options selected</div>';
+  const _npvs=[],_npvc=[],_npvl=[];
+  if(_mtAbVis){_npvs.push((m.npvSens||[]).map(d=>d.npv));_npvc.push(OPT.A.c);_npvl.push('NPV 1(A)&2(B)');}
+  if(_mtCVis){_npvs.push((mc.npvSens||[]).map(d=>d.npv));_npvc.push(OPT.C.c);_npvl.push('NPV 3(C)');}
+  document.getElementById('ch-npv').innerHTML=_npvs.length?svgLine(_npvs,{colors:_npvc,labels:_npvl,yFmt:fmtE,refs:[{v:0,c:'#f87171',lbl:'IRR (NPV=0)'}]}):'<div style="color:var(--di);padding:20px;font-size:11px">No options selected</div>';
+  const _cc2s=[],_cc2c=[],_cc2l=[];
+  if(_mtAbVis){_cc2s.push(r.mabR.map(row=>row.cum));_cc2c.push(OPT.A.c);_cc2l.push('Cum.CF 1&2');}
+  if(_mtCVis){_cc2s.push(r.mcR.map(row=>row.cum));_cc2c.push(OPT.C.c);_cc2l.push('Cum.CF 3');}
+  document.getElementById('ch-cc2').innerHTML=_cc2s.length?svgLine(_cc2s,{colors:_cc2c,labels:_cc2l,yFmt:fmtE,refs:[{v:0,c:'#3a3f5e',lbl:''}]}):'<div style="color:var(--di);padding:20px;font-size:11px">No options selected</div>';
 }
 
 
